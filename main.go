@@ -17,4 +17,14 @@ func main() {
 		// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.</p>
 		fmt.Println("i =", 100/i)
 	}
+
+	variableDeclaration()
+}
+
+func variableDeclaration() {
+	var i, j = 1, 2
+	k := 3
+	c, python, java := true, false, "no!"
+
+	fmt.Printf("i = %v, j = %v, k = %v, c = %v, python = %v, java = %v\n", i, j, k, c, python, java)
 }
