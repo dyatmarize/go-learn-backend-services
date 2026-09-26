@@ -99,12 +99,12 @@ $ openssl rand -base64 48   # paste into JWT_SECRET
 
 ### Loading it: `godotenv`
 
-`github.com/joho/godotenv` is already imported in `main.go`. Two behaviours matter:
+`github.com/joho/godotenv` is already imported in `../../main.go`. Two behaviours matter:
 
 1. **`Load` does not override existing environment variables.** If `DATABASE_URL` is already set in your shell, `.env` cannot clobber it. That's the right precedence: real environment wins.
 2. **A missing `.env` is not fatal.** In production there is no `.env`, and that must not crash the app.
 
-Which brings us to the existing bug in `main.go`:
+Which brings us to the existing bug in `../../main.go`:
 
 ```go
 func main() {
@@ -428,7 +428,7 @@ func TestLoad(t *testing.T) {
 - [ ] `.env` is populated, and `git check-ignore -v .env` confirms it is ignored.
 - [ ] `.env.example` is committed and contains no real secrets.
 - [ ] `config.Load()` fails loudly on a missing `DATABASE_URL` or a short `JWT_SECRET`.
-- [ ] `main.go` no longer discards the `godotenv.Load` error.
+- [ ] `../../main.go` no longer discards the `godotenv.Load` error.
 - [ ] `go test ./internal/config/...` passes.
 - [ ] Nothing outside `internal/config` calls `os.Getenv`.
 

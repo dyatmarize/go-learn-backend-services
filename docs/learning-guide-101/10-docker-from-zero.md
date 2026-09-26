@@ -719,7 +719,7 @@ Since your DevOps team runs deployment, this boundary is worth making explicit �
 5. **Logs to stdout/stderr, structured.** Chapter 08.
 6. **The image is immutable and contains no secrets.** Everything sensitive arrives at runtime.
 
-Ask them: *which* registry, *which* environment variables must be set in production, what the health probe paths should be, and what grace period they allow on shutdown. Those four answers determine your Dockerfile and your `main.go`.
+Ask them: *which* registry, *which* environment variables must be set in production, what the health probe paths should be, and what grace period they allow on shutdown. Those four answers determine your Dockerfile and your `../../main.go`.
 
 ---
 
@@ -830,7 +830,7 @@ docker system prune --volumes         # also unused volumes   ← deletes data
 3. Break the port mapping: run Postgres with `-p 5433:5432`. Confirm your host `psql` now needs port 5433 while the container is unchanged.
 4. Run an `alpine` container that exits immediately (`docker run alpine echo hi`), then `docker ps -a` and read the exit code. Then run `docker run alpine` with no command and explain the exit code from the docs.
 5. Build the naive Dockerfile from §10.5. `docker images` and note the size. Run `docker history learn101-api:naive` and find the layer that contains the Go toolchain. Then build the multi-stage version and compare sizes.
-6. Break the build cache: change a line in `main.go`, rebuild, and watch which layers are `CACHED` and which run. Then move `COPY . .` above `RUN go mod download` and observe the difference in a clean build.
+6. Break the build cache: change a line in `../../main.go`, rebuild, and watch which layers are `CACHED` and which run. Then move `COPY . .` above `RUN go mod download` and observe the difference in a clean build.
 7. Make a container fail on purpose by setting `DATABASE_URL` to `localhost`, and diagnose it using only `docker logs` and the `Exited (N)` code. Then fix it with `host.docker.internal`.
 8. `docker compose down -v` your Postgres, then `docker compose up -d` and re-apply migrations with `migrate ... up`. Time how long recovery takes — this is why the wipe-and-rebuild workflow is safe to have.
 9. Push an image somewhere real: create a free Docker Hub repo (or GHCR), `docker tag`, `docker login`, `docker push`. Then `docker rmi` it locally and `docker pull` it back. That round trip is what your DevOps team does.

@@ -93,9 +93,9 @@ Note that `.env` is excluded. Secrets are injected at runtime, never baked into 
 
 ---
 
-## 11.3 Graceful shutdown in `main.go`
+## 11.3 Graceful shutdown in `../../main.go`
 
-This is where the whole chapter lands. The final shape of `main.go`:
+This is where the whole chapter lands. The final shape of `../../main.go`:
 
 🧩 `cmd/api/main.go`:
 

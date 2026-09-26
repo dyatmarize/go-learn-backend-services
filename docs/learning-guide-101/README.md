@@ -8,7 +8,7 @@ You already know how to design a backend. What you don't yet know is how Go expr
 
 ## What this guide is
 
-- A **chapter-by-chapter build** of a real REST API over the schema already sitting in `database/migrations/`.
+- A **chapter-by-chapter build** of a real REST API over the schema already sitting in `../../database`.
 - A **translation table** at every step: "in Spring Boot you'd reach for X; in Go you write Y."
 - **Complete, runnable code**. Every snippet is meant to be typed, not skimmed.
 

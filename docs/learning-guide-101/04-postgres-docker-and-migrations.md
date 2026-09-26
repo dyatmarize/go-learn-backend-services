@@ -8,7 +8,7 @@ This chapter is the Go-ified version of: Spring Boot's `DataSource` autoconfigur
 
 ## 4.1 Where you are right now
 
-The repo has a schema file on disk at `database/migrations/000001_initial_schema.up.sql`. It's currently **deleted from the last commit**, so treat it as in-progress work you're about to adopt properly.
+The repo has a schema file on disk at `../../database`. It's currently **deleted from the last commit**, so treat it as in-progress work you're about to adopt properly.
 
 Two things to fix before building on it:
 
@@ -330,9 +330,9 @@ func run() error {
 
 `signal.NotifyContext` appears early on purpose — it's how a `Ctrl-C` will later cancel in-flight queries and trigger graceful shutdown (chapter 11).
 
-### Why not `database/sql`?
+### Why not `../../database`?
 
-`database/sql` is the standard interface, and `pgx` can plug into it via `stdlib`. But the native `pgx` API gives you PostgreSQL-specific features that `database/sql` abstracts away: `jsonb` handling, `COPY` protocol, typed arrays, and `pgx.Row` scanning without reflection. Since you know you're on PostgreSQL, use `pgx` directly — sqlc generates code for the native API too.
+`../../database` is the standard interface, and `pgx` can plug into it via `stdlib`. But the native `pgx` API gives you PostgreSQL-specific features that `../../database` abstracts away: `jsonb` handling, `COPY` protocol, typed arrays, and `pgx.Row` scanning without reflection. Since you know you're on PostgreSQL, use `pgx` directly — sqlc generates code for the native API too.
 
 ---
 

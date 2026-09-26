@@ -358,7 +358,7 @@ if errors.As(err, &appErr) {
 **Reflexes to suppress:**
 
 - Don't build a decorator-cake of exception hierarchies. Use a small set of sentinel errors plus one custom error type for HTTP mapping (chapter 08).
-- **Do not ignore errors.** `_ = doThing()` is a code smell. `godotenv.Load(".env")` being ignored in the current `main.go` is exactly the bug this rule prevents.
+- **Do not ignore errors.** `_ = doThing()` is a code smell. `godotenv.Load(".env")` being ignored in the current `../../main.go` is exactly the bug this rule prevents.
 - Don't panic. `panic` is for programmer error (nil map write, index out of range), never for "the user sent a bad email". Panics in an HTTP handler kill the goroutine serving one request; recovery middleware (chapter 08) exists to convert that into a 500.
 
 ---

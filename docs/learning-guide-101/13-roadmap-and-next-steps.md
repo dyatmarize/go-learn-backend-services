@@ -100,7 +100,7 @@ Things the guide told you to change in the repo but that weren't done for you:
 - [ ] `.env.example` is committed with placeholders and no secrets
 - [ ] `go.sum` exists and is committed
 - [ ] `db/migrations/000001_initial_schema.down.sql` exists
-- [ ] `database/` is gone; everything lives under `db/`
+- [ ] `../../database` is gone; everything lives under `db/`
 - [ ] `docs/` contains no `.go` files (so it stays out of the build)
 
 Then, when you're ready:
@@ -255,7 +255,7 @@ What got **harder**:
 - Error handling is verbose by design, and you must resist collapsing it.
 - Less "someone already solved this exact problem" than the Java ecosystem has.
 
-The trade is **explicitness for convenience**. Everything the Spring container was doing for you is now visible in `main.go` and `app.Build`. That's the point — and for a service you have to operate at 2am, it's usually the right trade.
+The trade is **explicitness for convenience**. Everything the Spring container was doing for you is now visible in `../../main.go` and `app.Build`. That's the point — and for a service you have to operate at 2am, it's usually the right trade.
 
 You've reached the end of the guide. Go build the next resource.
 

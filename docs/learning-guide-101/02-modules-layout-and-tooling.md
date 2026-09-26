@@ -156,7 +156,7 @@ learn101/
 
 ### `cmd/`
 
-Each subdirectory is one binary. `cmd/api` is your HTTP server. Later, `cmd/migrate` or `cmd/worker` would sit alongside it, each with a thin `main.go` that does nothing but wire and start. This is why `main.go` should stay small — it's a composition root, not a place for logic.
+Each subdirectory is one binary. `cmd/api` is your HTTP server. Later, `cmd/migrate` or `cmd/worker` would sit alongside it, each with a thin `../../main.go` that does nothing but wire and start. This is why `../../main.go` should stay small — it's a composition root, not a place for logic.
 
 ### `internal/` — enforced privacy
 
