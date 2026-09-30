@@ -11,7 +11,7 @@ type CoreUserService struct {
 	users []CoreUser
 }
 
-func NewUserService() *CoreUserService {
+func NewCoreUserService() *CoreUserService {
 	now := time.Now()
 	return &CoreUserService{
 		users: []CoreUser{
@@ -61,7 +61,7 @@ func (s *CoreUserService) SetInactive(id int64) (*CoreUser, error) {
 
 			now := time.Now()
 			s.users[i].UpdatedAt = now
-			s.users[i].DeletedAt = nil
+			s.users[i].DeletedAt = &now
 
 			return &s.users[i], nil
 		}

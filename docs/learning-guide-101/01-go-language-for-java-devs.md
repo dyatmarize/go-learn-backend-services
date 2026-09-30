@@ -418,7 +418,7 @@ type UserService struct {
 }
 
 // The "constructor". Wire everything by hand.
-func NewUserService(repo UserStore, hasher PasswordHasher) *UserService {
+func NewCoreUserService(repo UserStore, hasher PasswordHasher) *UserService {
 	return &UserService{repo: repo, hasher: hasher}
 }
 
@@ -434,7 +434,7 @@ There is no container scanning for `@Component`. Wiring happens in one place —
 func Build(cfg *config.Config, pool *pgxpool.Pool, log *slog.Logger) *gin.Engine {
 	repo := repository.NewUserRepository(pool)   // wraps sqlc's db.New(pool)
 	hasher := auth.NewBcryptHasher()
-	svc := service.NewUserService(repo, hasher)
+	svc := service.NewCoreUserService(repo, hasher)
 	userHandler := handler.NewUserHandler(svc, log)
 
 	r := gin.New()

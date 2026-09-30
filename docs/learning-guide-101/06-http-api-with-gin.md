@@ -579,7 +579,7 @@ type UserService struct {
 	hasher PasswordHasher
 }
 
-func NewUserService(repo UserStore, hasher PasswordHasher) *UserService {
+func NewCoreUserService(repo UserStore, hasher PasswordHasher) *UserService {
 	return &UserService{repo: repo, hasher: hasher}
 }
 
@@ -743,7 +743,7 @@ func Build(cfg *config.Config, pool *pgxpool.Pool, log *slog.Logger) *gin.Engine
 	issuer := auth.NewTokenIssuer(cfg)
 
 	// domain services
-	userSvc := service.NewUserService(userRepo, hasher)
+	userSvc := service.NewCoreUserService(userRepo, hasher)
 	authSvc := service.NewAuthService(userRepo, roleRepo, hasher, issuer)
 	roleSvc := service.NewRoleService(roleRepo)
 

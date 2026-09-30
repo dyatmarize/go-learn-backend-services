@@ -2,14 +2,18 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
-	"learn101/helper/logger"
+	"github.com/joho/godotenv"
+
+	"learn101/internal/config"
 	"learn101/internal/coreuser"
+	"learn101/internal/logger"
 )
 
 func printUserStatus(coreUserService *coreuser.CoreUserService) {
@@ -26,9 +30,39 @@ func printUserStatus(coreUserService *coreuser.CoreUserService) {
 }
 
 func main() {
-	logger.Init()
+	if err := run(); err != nil {
+		slog.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
 
-	coreUserService := coreuser.NewUserService()
+func run() error {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
+		slog.Warn("could not load .env", "err", err)
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+
+	// Build the logger, then make it the default so that anything which does not
+	// receive one explicitly still emits in the configured format.
+	log := logger.New(cfg)
+	slog.SetDefault(log)
+
+	log.Info("starting",
+		"env", cfg.AppEnv,
+		"addr", cfg.HTTPAddr,
+	)
+
+	interactiveCli()
+	return nil
+}
+
+func interactiveCli() {
+
+	coreUserService := coreuser.NewCoreUserService()
 	printUserStatus(coreUserService)
 
 	// Interactive CLI Loop

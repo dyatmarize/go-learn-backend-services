@@ -75,6 +75,32 @@ $ newgrp docker                                   # or log out and back in
 $ docker run --rm hello-world
 ```
 
+**Watch the `-a` in `usermod -aG`.** Without it, `sudo usermod -G docker "$USER"` *replaces* your entire group list — you'd silently drop `sudo`, `adm` and everything else, and lock yourself out of `sudo`. Always `-aG` (append), never `-G` on its own.
+
+Two failures are common at exactly this step.
+
+**1. `E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process NNNN (apt-get)`**
+
+The script shells out to `apt-get` twice, and apt permits exactly one process at a time. Something else holds the lock — usually `unattended-upgrades` running in the background on a freshly booted machine, or an `apt install` you started in another terminal a moment earlier.
+
+```bash
+# Who holds it?
+$ sudo fuser -v /var/lib/dpkg/lock-frontend
+$ ps -p NNNN -o pid,etime,cmd
+
+# If it's unattended-upgrades, just wait for it (or watch it finish):
+$ systemctl status unattended-upgrades
+$ journalctl -u unattended-upgrades -f
+```
+
+The lock is released when that process exits, so **just re-run the script** — it's idempotent and resumes cleanly. This error is almost always transient.
+
+Do **not** reach for `sudo rm /var/lib/dpkg/lock-frontend`. Deleting apt's lock files while a process still holds them can leave dpkg half-configured. Remove them only after confirming with `ps` that no `apt`/`dpkg`/`unattended-upgrade` process is running, and then repair with `sudo dpkg --configure -a`.
+
+**2. `sudo: preserving the entire environment is not supported, '-E' is ignored`**
+
+A warning, not an error. The script calls `sudo -E`, and Ubuntu's default `env_reset` policy forbids preserving the whole environment, so sudo ignores the flag and resets it instead. The script passes the couple of variables it actually needs on the command line (`DEBIAN_FRONTEND=noninteractive`), so nothing breaks. Ignore this line.
+
 If you skip the `usermod` line you'll hit this every time:
 
 ```

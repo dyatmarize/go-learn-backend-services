@@ -1,1 +1,21 @@
+# Build output
+/bin/
+/api
+/learn101
+*.exe
+
+# Test/coverage artifacts
+*.out
+coverage.html
+
+# Env files — never commit real secrets
+.env
+.env.local
+
+# Editor / tooling
 /.commandcode
+/.idea/workspace.xml
+/.idea/shelf/
+
+# OS noise
+.DS_Store

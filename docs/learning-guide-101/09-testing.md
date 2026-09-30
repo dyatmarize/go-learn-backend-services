@@ -331,7 +331,7 @@ import (
 
 func TestUserService_Create(t *testing.T) {
 	store := testutil.NewFakeUserStore()
-	svc := service.NewUserService(store, testutil.FakeHasher{})
+	svc := service.NewCoreUserService(store, testutil.FakeHasher{})
 
 	got, err := svc.Create(context.Background(), service.CreateUserInput{
 		Name:     "Budi",
@@ -349,7 +349,7 @@ func TestUserService_Create(t *testing.T) {
 
 func TestUserService_Create_DuplicateEmail(t *testing.T) {
 	store := testutil.NewFakeUserStore(db.CoreUser{ID: 1, Email: "budi@example.com"})
-	svc := service.NewUserService(store, testutil.FakeHasher{})
+	svc := service.NewCoreUserService(store, testutil.FakeHasher{})
 
 	_, err := svc.Create(context.Background(), service.CreateUserInput{
 		Email: "budi@example.com", Password: "secret123", RoleID: 3, Status: "ACTIVE", Name: "Budi",
@@ -398,7 +398,7 @@ func TestUserHandler_Create_Validation(t *testing.T) {
 
 	// Same fakes as the service tests — that sharing is exactly why
 	// internal/testutil exists.
-	svc := service.NewUserService(testutil.NewFakeUserStore(), testutil.FakeHasher{})
+	svc := service.NewCoreUserService(testutil.NewFakeUserStore(), testutil.FakeHasher{})
 	h := handler.NewUserHandler(svc, log)
 
 	r := gin.New()

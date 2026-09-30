@@ -358,6 +358,32 @@ $ find . -name '*.go' | entr -r go run ./cmd/api
 
 A `Makefile` at the repo root documents every command the project needs. This is idiomatic Go, not a workaround.
 
+### First: do you even have `make`?
+
+**`make` is not installed by default on Debian/Ubuntu.** This is the single most common reason for `make: command not found` when the `Makefile` is sitting right there:
+
+```bash
+$ make --version
+make: command not found
+
+$ sudo apt install make          # Debian/Ubuntu — or: sudo apt install build-essential
+$ sudo dnf install make          # Fedora / RHEL
+$ sudo pacman -S make            # Arch
+$ choco install make             # Windows, or just use WSL
+```
+
+And if you see this instead, it's a **different** problem — spaces where the file needs a tab. Make requires recipe lines to be indented with a real tab character, not spaces:
+
+```
+Makefile:4: *** missing separator.  Stop.
+```
+
+Your editor probably inserted spaces. Fix it with `cat -A Makefile | head` (a tab shows as `^I`) or by setting "indent with tabs" for `Makefile` in GoLand. This is the one piece of Makefile syntax that has no forgiveness in it.
+
+**If you can't install `make`, you lose nothing.** Every target is a one-line shortcut, and the recipe is right there for you to copy. `make run` is just `go run ./cmd/api`. Work through the chapter's commands directly and come back to `make` later.
+
+### The file
+
 ```makefile
 .PHONY: help run build test lint fmt vet tidy migrate-up migrate-down sqlc docker-up docker-down
 

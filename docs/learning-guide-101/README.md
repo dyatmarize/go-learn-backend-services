@@ -30,11 +30,42 @@ You already know how to design a backend. What you don't yet know is how Go expr
 | Tool | Why | Check |
 |---|---|---|
 | Go 1.27+ | The `go.mod` in this repo targets 1.27 | `go version` |
-| Docker + Compose | Runs PostgreSQL locally | `docker compose version` |
+| **`make`** | Runs the targets in the root `Makefile` (chapter 02 §2.6). **Not installed by default on Ubuntu/Debian** — this is the usual cause of `make: command not found`. | `make --version` |
+| Docker + Compose | Runs PostgreSQL locally (chapters 04, 10, 11) | `docker compose version` |
 | `psql` | Inspecting your data directly | `psql --version` |
-| [golang-migrate](https://github.com/golang-migrate/migrate) CLI | Applies migrations | `migrate -version` |
-| [sqlc](https://sqlc.dev) CLI | Generates typed Go from SQL | `sqlc version` |
+| [golang-migrate](https://github.com/golang-migrate/migrate) CLI | Applies migrations (chapter 04) | `migrate -version` |
+| [sqlc](https://sqlc.dev) CLI | Generates typed Go from SQL (chapter 05) | `sqlc version` |
+| [golangci-lint](https://golangci-lint.run) + [staticcheck](https://staticcheck.dev) | Static analysis (chapter 02 §2.4) | `golangci-lint --version` |
 | GoLand (you already have `.idea/` committed) | IDE | — |
+
+Most of these are not installed by default. On Debian/Ubuntu:
+
+```bash
+# make — the one people forget, because it isn't part of a default install
+$ sudo apt install make              # or: build-essential
+
+# Docker Engine + the Compose plugin
+$ curl -fsSL https://get.docker.com | sh
+$ sudo usermod -aG docker "$USER"    # then log out and back in
+
+# The Go-based CLIs. These install into $(go env GOPATH)/bin —
+# make sure that directory is on your PATH.
+$ go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+$ go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+$ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+$ go install honnef.co/go/tools/cmd/staticcheck@latest
+```
+
+Run this to check everything at once, and to see which install is still missing:
+
+```bash
+$ for t in go make docker psql migrate sqlc golangci-lint staticcheck; do
+    printf '%-16s' "$t"
+    command -v "$t" >/dev/null 2>&1 && echo OK || echo MISSING
+  done
+```
+
+`make` is the only one that isn't reachable through the Go toolchain, so it's the one people are most often missing without realising. Chapter 02 §2.6 covers it, including what to do if you genuinely can't install it.
 
 The repo's current state, for reference:
 
