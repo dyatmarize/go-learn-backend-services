@@ -14,8 +14,7 @@ coverage.html
 
 # Editor / tooling
 /.commandcode
-/.idea/workspace.xml
-/.idea/shelf/
+/.idea
 
 # OS noise
 .DS_Store

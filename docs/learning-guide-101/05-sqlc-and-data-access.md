@@ -233,6 +233,43 @@ internal/db
 └── user.sql.go
 ```
 
+### What regeneration does, and what it does not
+
+`sqlc generate` is a **build step**, not a migration. Being precise about what it rewrites saves real confusion later:
+
+| You do this | What happens |
+|---|---|
+| Add a query to an existing `db/queries/foo.sql` | `internal/db/foo.sql.go` is rewritten with the new function. Because `emit_interface: true`, `querier.go` also gains the method. |
+| Add a brand-new `db/queries/bar.sql` | A new `internal/db/bar.sql.go` appears. |
+| Hand-edit anything under `internal/db/` | **Lost on the next generate.** It is output, not source. |
+| Rename `foo.sql` to `baz.sql` | `baz.sql.go` appears — and **`foo.sql.go` stays behind**, declaring the same constants and methods. You get `getX redeclared in this block` and `method Queries.GetX already declared`. The build breaks. |
+| Delete `foo.sql` | `foo.sql.go` **stays behind**. Nothing breaks immediately, but you now own dead generated code that must keep type-checking against your schema forever. |
+
+**sqlc never deletes stale output.** It writes the files its inputs imply and leaves everything else untouched. So renaming or deleting a query file is a two-step operation:
+
+```bash
+$ sqlc generate
+$ for f in internal/db/*.sql.go; do          # find generated files with no query file
+    b=$(basename "$f" .sql.go)
+    [ -f "db/queries/$b.sql" ] || echo "orphan: $f"
+  done
+```
+
+Delete whatever it reports, then generate again. Whenever a build fails with `redeclared in this block`, this is the reason — a rename, not a typo.
+
+Two more things worth knowing:
+
+- **sqlc never connects to your database.** It reads the files listed under `schema:` as text and type-checks queries against them. So generation works with Postgres stopped, and adding a migration does not require applying it first. But your *application* still needs `migrate up` before those queries can run — sqlc validates the query against the schema, not the running database.
+- **The `Querier` interface grows with every query** (thanks to `emit_interface: true`). Anything implementing `db.Querier` — a hand-written test fake, for instance — stops compiling until it gains the new method. Chapter 09's fakes implement the hand-written `UserStore` interface rather than `db.Querier`, which insulates them. Keep it that way.
+
+**The loop you'll actually run:**
+
+```
+edit db/queries/*.sql  →  sqlc generate  →  go build ./...
+```
+
+`sqlc generate` only proves your SQL parses and type-checks. `go build ./...` is what proves the rest of your code still agrees with the new signatures — a changed parameter list breaks every call site, which is the entire point of generating code instead of writing it.
+
 💡 The generated model for your table looks like this:
 
 ```go
@@ -279,7 +316,53 @@ That's it — no magic. You could have written it by hand; sqlc just refuses to 
 
 ---
 
-## 5.6 The repository layer
+## 5.6 The domain and repository layers
+
+### First: create `internal/domain`
+
+**Do this before you write the repository.** If you followed chapter 02's directory list literally, you will have noticed that nothing has defined `internal/domain` yet — the repository below returns `domain.ErrNotFound`, and you cannot write that without the package existing. That was a genuine ordering bug in this guide, and this section closes it.
+
+Chapter 08 does **not** reintroduce this package; it extends this same file with a typed error used for HTTP mapping.
+
+🧩 `internal/domain/errors.go`:
+
+```go
+package domain
+
+import "errors"
+
+// Sentinel errors. Compare with errors.Is, never with ==.
+// They describe WHAT went wrong, with no knowledge of HTTP or of PostgreSQL.
+var (
+	ErrNotFound           = errors.New("not found")
+	ErrUnauthorized       = errors.New("unauthorized")
+	ErrForbidden          = errors.New("forbidden")
+	ErrConflict           = errors.New("conflict")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrEmailTaken         = errors.New("email already registered")
+	ErrAccountInactive    = errors.New("account is not active")
+)
+```
+
+Chapter 07 adds `internal/domain/role.go` — the role-level constants — to this same package.
+
+### Why the domain layer returns errors, not HTTP codes
+
+This comes up immediately: *why can't the repository just return a 404?*
+
+Because the same query serves three different consumers — the HTTP handler, this project's interactive CLI, and later a background worker. A `404` means nothing to a worker. So each layer speaks its own vocabulary, and there are exactly **two** translation points:
+
+| Layer | Speaks in | Knows about |
+|---|---|---|
+| `internal/db` (sqlc) | `pgx.ErrNoRows`, driver errors | SQL, PostgreSQL |
+| `internal/domain` | `ErrNotFound`, `ErrEmailTaken` | your business vocabulary, nothing else |
+| `internal/repository` | **translates** driver → domain | both — and it is the only place that does |
+| `internal/service` | domain errors | business rules |
+| `internal/handler` | **translates** domain → HTTP status | both — and it is the only place that does |
+
+`pgx` never leaks upward, and `net/http` never leaks downward. That is what makes chapter 09's service tests possible with no database and no web server.
+
+### The repository
 
 `internal/db` is generated and speaks in database terms. Your services shouldn't see `pgx.ErrNoRows` or sqlc parameter structs. So you wrap it.
 

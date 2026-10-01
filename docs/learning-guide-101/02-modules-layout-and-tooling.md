@@ -154,9 +154,34 @@ learn101/
 └── go.sum
 ```
 
+### When each package appears
+
+That tree is the **end state, not a setup step**. A directory becomes a Go package only when it contains a `.go` file, so `mkdir`-ing the whole thing now achieves nothing — and git does not track empty directories at all. Create each one in the chapter that first needs it:
+
+| Directory | Arrives in | First file | Holds |
+|---|---|---|---|
+| `cmd/api/` | **02 (now)** | `main.go` | the entrypoint |
+| `internal/config/` | **03** | `config.go` | typed configuration |
+| `internal/dbpool/` | **04** | `pool.go` | building the pgx pool |
+| `internal/db/` | **05** — generated | `db.go` | sqlc output, never hand-edited |
+| `internal/domain/` | **05** | `errors.go` | sentinel errors (07 adds role constants) |
+| `internal/repository/` | **05** | `user_repository.go` | sqlc wrappers + error translation |
+| `internal/service/` | **05–06** | `user_service.go` | business rules |
+| `internal/handler/` | **06** | `user_handler.go` | HTTP: bind, validate, respond |
+| `internal/app/` | **06** | `router.go`, `app.go` | the object graph |
+| `internal/auth/` | **07** | `password.go`, `token.go` | bcrypt and JWT |
+| `internal/middleware/` | **07–08** | `auth.go` | Gin middleware |
+| `internal/logger/` | **08** | `logger.go` | building the slog logger |
+| `db/migrations/`, `db/queries/` | **04, 05** | `.sql` files | schema and queries |
+
+Two consequences worth stating plainly, because they are the most common source of "wait, what?" while working through this guide:
+
+- **A chapter may introduce a package that an earlier chapter's code already referred to.** Chapter 05 is the important case: its repository layer returns `domain.ErrNotFound`, so `internal/domain` has to exist by then, even though the rest of the error handling doesn't arrive until chapter 08. The guide flags it where it happens.
+- **If a chapter ever asks you to use something you have not been told how to build, treat that as a bug in the guide, not in your project.** Go will not paper over it — a missing package is a compile error, which is why these orderings have to be right.
+
 ### `cmd/`
 
-Each subdirectory is one binary. `cmd/api` is your HTTP server. Later, `cmd/migrate` or `cmd/worker` would sit alongside it, each with a thin `../../main.go` that does nothing but wire and start. This is why `../../main.go` should stay small — it's a composition root, not a place for logic.
+Each subdirectory is one binary. `cmd/api` is your HTTP server. Later, `cmd/migrate` or `cmd/worker` would sit alongside it, each with a thin `main.go` that does nothing but wire and start. This is why `main.go` should stay small — it's a composition root, not a place for logic.
 
 ### `internal/` — enforced privacy
 
@@ -474,7 +499,7 @@ GoLand's "Implement methods" (`Ctrl+I`) is how you satisfy an interface without 
 1. Run `go mod tidy` and read the resulting `go.mod` and `go.sum`. Note how much smaller the graph is than a Spring Boot `pom.xml`.
 2. Run `go mod why github.com/joho/godotenv` and `go list -m all | wc -l`.
 3. Apply the `.gitignore` above, then `git rm --cached learn101` and confirm `git status` shows the deletion.
-4. Create the full directory skeleton with `mkdir -p cmd/api internal/{app,config,db,domain,repository,service,handler,middleware,auth} db/{migrations,queries}`.
+4. Create only what chapter 02 actually needs: `mkdir -p cmd/api internal/config`. Everything else in the tree arrives with the chapter listed in the table above — resist creating empty directories, since Go ignores them and git won't track them.
 5. Write the `Makefile` and run `make help`. Then `make fmt` and `make vet`.
 6. Build for a target you don't own: `GOOS=linux GOARCH=arm64 go build -o /tmp/api-arm64 ./cmd/api`, then check `file /tmp/api-arm64`.
 

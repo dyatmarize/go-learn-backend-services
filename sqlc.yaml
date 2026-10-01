@@ -1,0 +1,25 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    # sqlc reads your schema from the migrations directory.
+    # It understands golang-migrate naming and ignores *.down.sql.
+    schema: "db/migrations"
+    queries: "db/queries"
+    gen:
+      go:
+        package: "db"
+        out: "internal/db"
+        sql_package: "pgx/v5"          # generate against pgx, not database/sql
+        emit_json_tags: true
+        emit_interface: true           # produces Querier — great for testing
+        emit_empty_slices: true        # return []T{} instead of nil
+        emit_pointers_for_null_types: false
+        overrides:
+          # Nullable timestamptz -> *time.Time instead of pgtype.Timestamptz.
+          # Verbose but usable: you compare with nil, like Java's Instant.
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true

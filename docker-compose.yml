@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cool-app-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dyatmarize
+      POSTGRES_PASSWORD: adyatma13
+      POSTGRES_DB: agent_dyatmarize
+      # Deterministic collation makes text sorting stable across machines.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      # Host 5433, because this machine already runs PostgreSQL 18 on 5432.
+      # The container still listens on 5432 internally, which is what matters
+      # for service-to-service traffic on the Compose network.
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dyatmarize -d agent_dyatmarize"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres-data:

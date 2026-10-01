@@ -6,11 +6,13 @@ The Spring equivalents are `@ControllerAdvice` + `@ExceptionHandler`, SLF4J + MD
 
 ---
 
-## 8.1 Sentinels in the domain
+## 8.1 Extending the domain errors
+
+You already created `internal/domain/errors.go` in chapter 05, because the repository layer needed `domain.ErrNotFound` to translate `pgx.ErrNoRows`. **Nothing is being replaced here** — you are adding one type to that same file.
 
 Your domain layer defines *what can go wrong*. It should not know about HTTP status codes — that mapping belongs at the edge, so you can reuse the domain errors from a CLI or a worker without dragging in `net/http`.
 
-🧩 `internal/domain/errors.go`:
+🧩 `internal/domain/errors.go` after this chapter:
 
 ```go
 package domain

@@ -2,12 +2,17 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
+	"learn101/internal/db"
+	"learn101/internal/dbpool"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/joho/godotenv"
 
@@ -56,7 +61,18 @@ func run() error {
 		"addr", cfg.HTTPAddr,
 	)
 
-	interactiveCli()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	pool, err := dbpool.New(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	log.Info("Connected To database", "addr", cfg.HTTPAddr)
+
+	listUser, err := db.Querier.Li
 	return nil
 }
 

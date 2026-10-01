@@ -13,7 +13,7 @@ Work in this order. Each milestone ends with something runnable, and each depend
 
 ```bash
 $ go mod tidy
-$ mkdir -p cmd/api internal/{app,config,dbpool,domain,repository,service,handler,middleware,auth,logging}
+$ mkdir -p cmd/api internal/config      # the rest of the tree arrives with its chapters
 # apply the .gitignore from chapter 02, then:
 $ git rm --cached learn101
 $ go build ./...
@@ -255,7 +255,7 @@ What got **harder**:
 - Error handling is verbose by design, and you must resist collapsing it.
 - Less "someone already solved this exact problem" than the Java ecosystem has.
 
-The trade is **explicitness for convenience**. Everything the Spring container was doing for you is now visible in `../../main.go` and `app.Build`. That's the point — and for a service you have to operate at 2am, it's usually the right trade.
+The trade is **explicitness for convenience**. Everything the Spring container was doing for you is now visible in `main.go` and `app.Build`. That's the point — and for a service you have to operate at 2am, it's usually the right trade.
 
 You've reached the end of the guide. Go build the next resource.
 
