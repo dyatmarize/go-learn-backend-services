@@ -5,8 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"learn101/internal/db"
-	"learn101/internal/dbpool"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -14,15 +12,24 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
 	"learn101/internal/config"
-	"learn101/internal/coreuser"
+	"learn101/internal/dbpool"
 	"learn101/internal/logger"
+	"learn101/internal/repository"
 )
 
-func printUserStatus(coreUserService *coreuser.CoreUserService) {
-	listUser, err := coreUserService.GetAll()
+func getUserList(coreUserRepository *repository.CoreUserRepository, ctx context.Context) {
+	// List takes (limit, offset) — offset is "how many rows to skip",
+	// not a page number. With offset 10 and only 2 rows, everything is skipped.
+	const (
+		limit  = 10
+		offset = 0
+	)
+
+	listUser, err := coreUserRepository.List(ctx, limit, offset)
 	if err != nil {
 		slog.Error("failed fetching all users", slog.String("err", err.Error()))
 		return
@@ -30,7 +37,7 @@ func printUserStatus(coreUserService *coreuser.CoreUserService) {
 
 	fmt.Println("\n [List Of All Users]")
 	for _, user := range listUser {
-		fmt.Printf(" - Name: %s | Email: %s | Status: %v -\n", user.Name, user.Email, user.IsActive())
+		fmt.Printf(" - Name: %s | Email: %s | Status: %v -\n", user.Name, user.Email, user.Status)
 	}
 }
 
@@ -72,14 +79,16 @@ func run() error {
 
 	log.Info("Connected To database", "addr", cfg.HTTPAddr)
 
-	listUser, err := db.Querier.Li
+	if !cfg.IsProduction() {
+		interactiveCli(pool, ctx)
+	}
 	return nil
 }
 
-func interactiveCli() {
+func interactiveCli(pool *pgxpool.Pool, ctx context.Context) {
 
-	coreUserService := coreuser.NewCoreUserService()
-	printUserStatus(coreUserService)
+	coreUserRepository := repository.NewCoreUserRepository(pool)
+	getUserList(coreUserRepository, ctx)
 
 	// Interactive CLI Loop
 	reader := bufio.NewReader(os.Stdin)
@@ -91,15 +100,24 @@ func interactiveCli() {
 		fmt.Println("4. Exit")
 		fmt.Print("Choose an option: ")
 
-		input, _ := reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			// stdin is closed or unreadable. Without this the loop spins forever:
+			// ReadString returns "" plus an error on every single iteration,
+			// which is exactly what happens when stdin is /dev/null in a container.
+			return
+		}
 		input = strings.TrimSpace(input)
 
 		switch input {
 		case "1":
-			printUserStatus(coreUserService)
+			getUserList(coreUserRepository, ctx)
 		case "2", "3":
 			fmt.Print("Enter User ID: ")
-			idInput, _ := reader.ReadString('\n')
+			idInput, err := reader.ReadString('\n')
+			if err != nil {
+				return
+			}
 			id, err := strconv.ParseInt(strings.TrimSpace(idInput), 10, 64)
 			if err != nil {
 				slog.Error("Invalid ID format", slog.String("input", idInput))
@@ -107,14 +125,14 @@ func interactiveCli() {
 			}
 
 			if input == "2" {
-				user, err := coreUserService.SetActive(id)
+				user, err := coreUserRepository.SetActive(ctx, id)
 				if err != nil {
 					slog.Error("Failed to activate", slog.String("err", err.Error()))
 				} else {
 					slog.Info("User activated successfully", slog.Any("user", user))
 				}
 			} else {
-				user, err := coreUserService.SetInactive(id)
+				user, err := coreUserRepository.SetInactive(ctx, id)
 				if err != nil {
 					slog.Error("Failed to deactivate", slog.String("err", err.Error()))
 				} else {

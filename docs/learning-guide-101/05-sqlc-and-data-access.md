@@ -383,19 +383,19 @@ import (
 	"learn101/internal/domain"
 )
 
-type UserRepository struct {
+type CoreUserRepository struct {
 	q    *db.Queries
 	pool *pgxpool.Pool
 }
 
-func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
-	return &UserRepository{
+func NewUserRepository(pool *pgxpool.Pool) *CoreUserRepository {
+	return &CoreUserRepository{
 		q:    db.New(pool),
 		pool: pool,
 	}
 }
 
-func (r *UserRepository) ByEmail(ctx context.Context, email string) (db.CoreUser, error) {
+func (r *CoreUserRepository) ByEmail(ctx context.Context, email string) (db.CoreUser, error) {
 	u, err := r.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -406,7 +406,7 @@ func (r *UserRepository) ByEmail(ctx context.Context, email string) (db.CoreUser
 	return u, nil
 }
 
-func (r *UserRepository) ByUUID(ctx context.Context, uuid string) (db.CoreUser, error) {
+func (r *CoreUserRepository) ByUUID(ctx context.Context, uuid string) (db.CoreUser, error) {
 	u, err := r.q.GetUserByUUID(ctx, uuid)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -417,7 +417,7 @@ func (r *UserRepository) ByUUID(ctx context.Context, uuid string) (db.CoreUser, 
 	return u, nil
 }
 
-func (r *UserRepository) List(ctx context.Context, limit, offset int32) ([]db.CoreUser, error) {
+func (r *CoreUserRepository) List(ctx context.Context, limit, offset int32) ([]db.CoreUser, error) {
 	users, err := r.q.ListUsers(ctx, db.ListUsersParams{Limit: limit, Offset: offset})
 	if err != nil {
 		// Lists "succeed" with zero rows; ErrNoRows is not expected here.
@@ -426,7 +426,7 @@ func (r *UserRepository) List(ctx context.Context, limit, offset int32) ([]db.Co
 	return users, nil
 }
 
-func (r *UserRepository) Create(ctx context.Context, p db.CreateUserParams) (db.CoreUser, error) {
+func (r *CoreUserRepository) Create(ctx context.Context, p db.CreateUserParams) (db.CoreUser, error) {
 	u, err := r.q.CreateUser(ctx, p)
 	if err != nil {
 		return db.CoreUser{}, fmt.Errorf("create user: %w", err)
@@ -434,7 +434,7 @@ func (r *UserRepository) Create(ctx context.Context, p db.CreateUserParams) (db.
 	return u, nil
 }
 
-func (r *UserRepository) SoftDelete(ctx context.Context, uuid string) error {
+func (r *CoreUserRepository) SoftDelete(ctx context.Context, uuid string) error {
 	rows, err := r.q.SoftDeleteUser(ctx, uuid)
 	if err != nil {
 		return fmt.Errorf("soft delete user: %w", err)
@@ -474,7 +474,7 @@ type UserStore interface {
 }
 ```
 
-`*repository.UserRepository` satisfies it as soon as you add `ByID`, `Count` and `Update` in the same shape as the methods in §5.6 — and the handler tests in chapter 09 depend on exactly this shape, so keep the two in sync. No annotation, no `@Repository` — and a hand-written fake satisfies it too.
+`*repository.CoreUserRepository` satisfies it as soon as you add `ByID`, `Count` and `Update` in the same shape as the methods in §5.6 — and the handler tests in chapter 09 depend on exactly this shape, so keep the two in sync. No annotation, no `@Repository` — and a hand-written fake satisfies it too.
 
 ---
 
@@ -485,7 +485,7 @@ type UserStore interface {
 sqlc generates `Queries.WithTx(tx)` so the same generated methods run inside the transaction:
 
 ```go
-func (r *UserRepository) createWithAudit(ctx context.Context, p db.CreateUserParams) error {
+func (r *CoreUserRepository) createWithAudit(ctx context.Context, p db.CreateUserParams) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)

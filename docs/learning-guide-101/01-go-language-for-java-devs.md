@@ -402,7 +402,7 @@ This is the chapter in miniature:
 @Service
 @RequiredArgsConstructor
 public class UserService {
-	@Autowired private final UserRepository repo;
+	@Autowired private final CoreUserRepository repo;
 	@Autowired private final PasswordEncoder encoder;
 
 	@Transactional
@@ -458,7 +458,7 @@ Every handler, service and repository method takes `ctx context.Context` as its 
 - **Request-scoped values** — request IDs, authenticated identity.
 
 ```go
-func (r *UserRepository) ByUUID(ctx context.Context, uuid string) (*db.CoreUser, error) {
+func (r *CoreUserRepository) ByUUID(ctx context.Context, uuid string) (*db.CoreUser, error) {
 	// ctx flows into the query: if the client disconnects, the query is cancelled
 	return r.q.GetUserByUUID(ctx, uuid)
 }
